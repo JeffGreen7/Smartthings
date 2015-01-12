@@ -1,0 +1,392 @@
+/**
+ *  Schedule Thermostat
+ *
+ *  Copyright 2015 Jeff Green
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ */
+ 
+definition(
+    name: "Thermostat Scheduler",
+    namespace: "JeffGreen7",
+    author: "Jeff Green",
+    description: "Change your thermostat settings automatically at a certain time.",
+    category: "Green Living",
+    iconUrl: "https://s3.amazonaws.com/smartapp-icons/GreenLiving/Cat-GreenLiving.png",
+    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/GreenLiving/Cat-GreenLiving@2x.png",
+    iconX3Url: "https://s3.amazonaws.com/smartapp-icons/GreenLiving/Cat-GreenLiving@3x.png"
+)
+
+preferences {
+
+	page(name: "pageOne", title: "Select Thermostat to use and people who need to be home", nextPage: "pageTwo", uninstall: true) {
+		section("Choose thermostat... ") {
+			input "thermostat", "capability.thermostat", required: true
+		}
+    
+    	section("When at least one of these people are home") {
+        	input "people", "capability.presenceSensor", multiple: true, required: true
+    	}
+	}
+	
+	page(name: "pageTwo", title: "Weekday Schedule times and settings", nextPage: "pageThree", uninstall: false) {
+	
+		section("Monday to Friday Schedule On Time 1") {
+        	input "OntimeWk1", "time", title: "On Time 1", required: true	
+			input "tempSetpointOnWk1H", "number", title: "Time 1 Heat Temp Degrees Fahrenheit?", required: true
+			input "tempSetpointOnWk1C", "number", title: "Time 1 Cool Temp Degrees Fahrenheit?", required: true
+		}
+		section("Monday to Friday Schedule Off Time 1") {
+			input "OfftimeWk1", "time", title: "Off Time 1", required: true	
+		}
+		section("Monday to Friday Schedule On Time 2") {
+			input "OntimeWk2", "time", title: "On Time 2", required: true
+			input "tempSetpointOnWk2H", "number", title: "Time 2 Heat Temp Degrees Fahrenheit?", required: true
+			input "tempSetpointOnWk2C", "number", title: "Time 2 Cool Temp Degrees Fahrenheit?", required: true
+		}
+		section("Monday to Friday Schedule Off Time 2") {
+			input "OfftimeWk2", "time", title: "Off Time 2", required: true
+		}
+	}
+	page(name: "pageThree", title: "Weekend Schedule times and settings", uninstall: true, install: true) {
+	
+        section("Saturday & Sunday Schedule On Time 1") {
+			input "OntimeWkend1", "time", title: "On Time 1", required: true
+			input "tempSetpointOnWkend1H", "number", title: "Time 1 Heat Temp Degrees Fahrenheit?", required: true
+			input "tempSetpointOnWkend1C", "number", title: "Time 1 Cool Temp Degrees Fahrenheit?", required: true
+		}
+		section("Saturday & Sunday  Schedule Off Time 1") {
+			input "OfftimeWkend1", "time", title: "Off Time 1", required: true
+		}
+		section("Saturday & Sunday Schedule On Time 2") {
+			input "OntimeWkend2", "time", title: "On Time 2", required: true
+			input "tempSetpointOnWkend2H", "number", title: "Time 2 Heat Temp Degrees Fahrenheit?", required: true
+			input "tempSetpointOnWkend2C", "number", title: "Time 2 Cool Temp Degrees Fahrenheit?", required: true
+		}
+		section("Saturday & Sunday Schedule Off Time 2") {
+			input "OfftimeWkend2", "time", title: "Off Time 2", required: true
+		}
+	}
+}
+
+def ScheduleWeekendDay() {
+    unschedule() // clear running schedules
+    def timeNow = now() + (2*1000) //  add a couple of minutes just in case
+    
+    def schedTime1 = timeToday(OfftimeWkend1,location.timeZone)
+    if (timeNow >= schedTime1.time) { 
+    	// We have passed current time so will scheduled for next day
+    	schedTime1 = schedTime1 + 1
+    } 
+   	schedule(schedTime1, "stopTimerCallback1")
+    
+    def schedTime2 = timeToday(OfftimeWkend2,location.timeZone)
+    if (timeNow >= schedTime2.time) { 
+    	// We have passed current time so will scheduled for next day
+    	schedTime2 = schedTime2 + 1
+    } 
+   	schedule(schedTime2, "stopTimerCallback2")
+    
+    def schedTime3 = timeToday(OntimeWkend1,location.timeZone)
+    if (timeNow >= schedTime3.time) { 
+    	// We have passed current time so will scheduled for next day
+    	schedTime3 = schedTime3 + 1
+    } 
+   	schedule(schedTime3, "startTimerCallback1")
+    
+    def schedTime4 = timeToday(OntimeWkend2,location.timeZone)
+    if (timeNow >= schedTime4.time) { 
+       // We have passed current time so will scheduled for next day
+    	schedTime4 = schedTime4 + 1
+    } 
+   	schedule(schedTime4, "startTimerCallback2")
+    
+    log.debug("Weekend Schedule On time 1 today ${schedTime3.format("EEE MMM dd yyyy HH:mm z", location.timeZone)}")
+    log.debug("Weekend Schedule Off time 1 today ${schedTime1.format("EEE MMM dd yyyy HH:mm z", location.timeZone)}")
+    log.debug("Weekend Schedule On time 2 today ${schedTime4.format("EEE MMM dd yyyy HH:mm z", location.timeZone)}")
+    log.debug("Weekend Schedule Off time 2 today ${schedTime2.format("EEE MMM dd yyyy HH:mm z", location.timeZone)}")
+}
+
+def ScheduleWeekDay() {
+    unschedule() // clear running schedules
+    def timeNow = now() + (2*1000) //  add a couple of minutes just in case
+    
+    def schedTime1 = timeToday(OfftimeWk1,location.timeZone)
+    if (timeNow >= schedTime1.time) { 
+    	// We have passed current time so will scheduled for next day
+    	schedTime1 = schedTime1 + 1
+    } 
+   	schedule(schedTime1, "stopTimerCallback1")
+    
+    def schedTime2 = timeToday(OfftimeWk2,location.timeZone)
+    if (timeNow >= schedTime2.time) { 
+    	// We have passed current time so will scheduled for next day
+    	schedTime2 = schedTime2 + 1
+    } 
+   	schedule(schedTime2, "stopTimerCallback2")
+    
+    def schedTime3 = timeToday(OntimeWk1,location.timeZone)
+    if (timeNow >= schedTime3.time) { 
+    	// We have passed current time so will scheduled for next day
+    	schedTime3 = schedTime3 + 1
+    } 
+   	schedule(schedTime3, "startTimerCallback1")
+    
+    def schedTime4 = timeToday(OntimeWk2,location.timeZone)
+    if (timeNow >= schedTime4.time) { 
+    	// We have passed current time so will scheduled for next day
+       schedTime4 = schedTime4 + 1
+    } 
+   	schedule(schedTime4, "startTimerCallback2")
+    
+    log.debug("Weekend Schedule On time 1 today ${schedTime3.format("EEE MMM dd yyyy HH:mm z", location.timeZone)}")
+    log.debug("Weekend Schedule Off time 1 today ${schedTime1.format("EEE MMM dd yyyy HH:mm z", location.timeZone)}")
+    log.debug("Weekend Schedule On time 2 today ${schedTime4.format("EEE MMM dd yyyy HH:mm z", location.timeZone)}")
+    log.debug("Weekend Schedule Off time 2 today ${schedTime2.format("EEE MMM dd yyyy HH:mm z", location.timeZone)}")
+}
+
+
+def installed()
+{
+	subscribe(thermostat, "heatingSetpoint", heatSetpointHandler)
+	subscribe(thermostat, "coolingSetpoint", coolSetpointHandler)
+	subscribe(thermostat, "temperature", temperatureHandler)
+    if (IsWeekday())
+    {
+    	ScheduleWeekDay()
+		
+     } else {
+     	ScheduleWeekendDay()
+	}	
+}
+
+def updated()
+{
+	unsubscribe()
+	subscribe(thermostat, "heatingSetpoint", heatingSetpointHandler)
+	subscribe(thermostat, "coolingSetpoint", coolingSetpointHandler)
+	subscribe(thermostat, "temperature", temperatureHandler)
+    if (IsWeekday())
+	{
+    	ScheduleWeekDay()
+		
+     } else {
+     	ScheduleWeekendDay()
+	}	
+}
+
+def heatingSetpointHandler(evt)
+{
+	log.debug "heatingSetpoint: $evt, $settings"
+}
+
+def coolingSetpointHandler(evt)
+{
+	log.debug "coolingSetpoint: $evt, $settings"
+}
+
+def temperatureHandler(evt)
+{
+	log.debug "currentTemperature: $evt, $settings"
+}
+
+private SwitchOn(number)
+{
+	def thermostatState = thermostat.currentThermostatMode
+	def thermostatFan = thermostat.currentThermostatFanMode
+	log.debug "HVAC current mode $thermostatState"
+	log.debug "HVAC Fan current mode $thermostatFan"
+	
+	if (IsAnyOneHome()) //only turn on heating/cooling if someone is home
+	{
+		// set the fan mode to auto
+    	if (thermostatFan != "fanAuto") { 
+			thermostat.setThermostatFanMode("fanAuto")
+			log.debug "HVAC fan mode set to auto"
+		}
+		
+		log.debug "Turning on Thermostat"
+		def thermostatnumber = thermostat.currentTemperature
+		log.debug "checking temperature $thermostatnumber"
+		if (IsWeekday())
+		{
+			//its a week day so use the weekday schedule entered		
+			log.debug "SwitchOn called and its a weekday"
+			switch (number){
+			case 1: // start time one
+				if (thermostatnumber <= tempSetpointOnWk1H){
+					thermostat.setHeatingSetpoint(tempSetpointOnWk1H)
+					log.debug "SwitchOn Time 1 week heat $tempSetpointOnWk1H deg"
+					SetHeatMode();
+				} else if (thermostatnumber > tempSetpointOnWk1C){
+					thermostat.setCoolingSetpoint(tempSetpointOnWk1C)
+					log.debug "SwitchOn Time 1 week cool $tempSetpointOnWk1C deg"
+					SetCoolMode();
+				}
+				break
+			case 2: // start time two
+				if (thermostatnumber <= tempSetpointOnWk2H){
+					thermostat.setHeatingSetpoint(tempSetpointOnWk2H)
+					log.debug "SwitchOn Time 2 week heat $tempSetpointOnWk2H deg"
+					SetHeatMode();
+				} else if (thermostatnumber > tempSetpointOnWk2C){
+					thermostat.setCoolingSetpoint(tempSetpointOnWk2C)
+					log.debug "SwitchOn Time 2 week cool $tempSetpointOnWk2C deg"
+					SetCoolMode();
+				}
+				break	
+			}
+		} else
+		{
+			//its a weekend day so use the weekday schedule entered		
+			log.debug "Switch On called and its a weekend day"
+			switch (number){
+			case 1: // start time one
+				if (thermostatnumber < tempSetpointOnWkend1H){
+					thermostat.setHeatingSetpoint(tempSetpointOnWkend1H)
+					log.debug "SwitchOn Time 1 weekend heat $tempSetpointOnWkend1H deg"
+					SetHeatMode();
+				} else if (thermostatnumber > tempSetpointOnWk1C){
+					thermostat.setCoolingSetpoint(tempSetpointOnWkend1C)
+					log.debug "SwitchOn Time 1 weekend cool $tempSetpointOnWkend1C deg"
+					SetCoolMode();
+				}
+				break
+			case 2: // start time two
+				if (thermostatnumber < tempSetpointOnWkend2H) {
+					thermostat.setHeatingSetpoint(tempSetpointOnWkend2H)
+					log.debug "SwitchOn Time 2 weekend heat $tempSetpointOnWkend2H deg"
+					SetHeatMode();
+				} else if (thermostatnumber > tempSetpointOnWkend2C){
+					thermostat.setCoolingSetpoint(tempSetpointOnWkend2C)
+					log.debug "SwitchOn Time 2 weekend cool $tempSetpointOnWkend2C deg"
+					SetCoolMode();
+				}
+				break	
+			}
+		}
+		
+	} else {
+	  log.debug "No ones home dont heat"
+	}	
+}
+
+private SetHeatMode()
+{
+	// Set the thermostat to heat mode
+	def hvacmode = "heat"
+	thermostat.setThermostatMode(hvacmode)
+	log.debug "HVAC mode set to $hvacmode"
+}
+
+private SetCoolMode()
+{
+	// Set the thermostat to cool mode
+	def hvacmode = "cool"
+	thermostat.setThermostatMode(hvacmode)
+	log.debug "HVAC mode set to $hvacmode"
+}
+
+private IsAnyOneHome() {
+	// Check for presence sensors to see if anyone is home
+	// TRUE means someone is home, FALSE not
+	log.debug "Checking Someone is home"
+    def result = false
+	log.debug "IsAnyOneHome"
+    for (person in people) {
+        if (person.currentPresence == "present") {
+            // someone is present 
+            result = true
+            break
+        }
+    }
+    log.debug "Someone is home: $result"
+    return result
+}
+
+private IsWeekday() {
+	// Check to see if today is a weekday TRUE = Weekday FALSE = Weekend
+	log.debug "Checking if its a weekday"
+	def result = false
+	def calendar = Calendar.getInstance()
+	calendar.setTimeZone(location.timeZone)
+	def today = calendar.get(Calendar.DAY_OF_WEEK)
+	def timezone =location.timeZone
+	log.debug "Today is a ${today} Timezone is $timezone"
+
+	switch (today) {
+		case Calendar.MONDAY:
+	        log.debug("Today is Monday")
+			result = true
+			break
+		case Calendar.TUESDAY:
+			log.debug("Today is Tuesday")
+			result = true
+			break
+		case Calendar.WEDNESDAY:
+			log.debug("Today is Wednesday")
+         	result = true
+			break
+		case Calendar.THURSDAY:
+            log.debug("Today is Thursday")
+            result = true
+			break
+		case Calendar.FRIDAY:
+            log.debug("Today is Friday")
+            result = true
+			break
+	}
+    
+	log.debug("The day is $today")
+	log.debug("The return is $result")
+	return result
+}
+
+
+def stopTimerCallback1() {
+	// Timer off has been hit turn the thermostat off
+	log.debug "Turning off Thermostat"
+	thermostat.off()
+	// schedule next set of timers
+	updated()
+}
+
+def stopTimerCallback2() {
+	// Timer off has been hit turn the thermostat off
+	log.debug "Turning off Thermostat"
+	thermostat.off()
+	// schedule next set of timers
+	updated()
+}
+
+// catchall
+def event(evt)
+{
+	log.debug "value: $evt.value, event: $evt, settings: $settings, handlerName: ${evt.handlerName}"
+}
+
+
+def startTimerCallback1() {
+	log.debug "Turning on Thermostat - Timer 1"
+	// Timer 1 on has been triggered turn on the heat or cooling based on temperature
+	SwitchOn(1)
+	// schedule next set of timers
+	updated()
+}
+
+def startTimerCallback2() {
+	log.debug "Turning on Thermostat - Timer 2"
+	// Timer 2 on has been triggered turn on the heat or cooling based on temperature
+	SwitchOn(2)
+	// schedule next set of timers
+	updated()
+}
+
