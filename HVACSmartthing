@@ -84,28 +84,52 @@ def ScheduleWeekendDay() {
     def schedTime1 = timeToday(OfftimeWkend1,location.timeZone)
     if (timeNow >= schedTime1.time) { 
     	// We have passed current time so will scheduled for next day
-    	schedTime1 = schedTime1 + 1
+    	if (IsTomorrowaWeekday()) {
+    		schedTime1 = timeToday(OfftimeWk1,location.timeZone)
+    	}
+    	else
+    	{
+    		schedTime1 = schedTime1 + 1
+    	}	
     } 
    	schedule(schedTime1, "stopTimerCallback1")
     
     def schedTime2 = timeToday(OfftimeWkend2,location.timeZone)
     if (timeNow >= schedTime2.time) { 
     	// We have passed current time so will scheduled for next day
-    	schedTime2 = schedTime2 + 1
+    	if (IsTomorrowaWeekday()) {
+    		schedTime2 = timeToday(OfftimeWk2,location.timeZone)
+    	}
+    	else
+    	{
+    		schedTime2 = schedTime2 + 1
+    	}	
     } 
    	schedule(schedTime2, "stopTimerCallback2")
     
     def schedTime3 = timeToday(OntimeWkend1,location.timeZone)
     if (timeNow >= schedTime3.time) { 
     	// We have passed current time so will scheduled for next day
-    	schedTime3 = schedTime3 + 1
+    	if (IsTomorrowaWeekday()) {
+    		schedTime3 = timeToday(OntimeWk1,location.timeZone)
+    	}
+    	else
+    	{
+    		schedTime3 = schedTime3 + 1
+    	}	
     } 
    	schedule(schedTime3, "startTimerCallback1")
     
     def schedTime4 = timeToday(OntimeWkend2,location.timeZone)
     if (timeNow >= schedTime4.time) { 
        // We have passed current time so will scheduled for next day
-    	schedTime4 = schedTime4 + 1
+    	if (IsTomorrowaWeekday()) {
+    		schedTime4 = timeToday(OntimeWk2,location.timeZone)
+    	}
+    	else
+    	{
+    		schedTime4 = schedTime4 + 1
+    	}	
     } 
    	schedule(schedTime4, "startTimerCallback2")
     
@@ -122,28 +146,52 @@ def ScheduleWeekDay() {
     def schedTime1 = timeToday(OfftimeWk1,location.timeZone)
     if (timeNow >= schedTime1.time) { 
     	// We have passed current time so will scheduled for next day
-    	schedTime1 = schedTime1 + 1
+    	if (IsTomorrowaWeekday()) {
+    		schedTime1 = schedTime1 + 1
+    	}
+    	else
+    	{
+    		schedTime1 = timeToday(OfftimeWkend1,location.timeZone)
+    	}	
     } 
    	schedule(schedTime1, "stopTimerCallback1")
     
     def schedTime2 = timeToday(OfftimeWk2,location.timeZone)
     if (timeNow >= schedTime2.time) { 
     	// We have passed current time so will scheduled for next day
-    	schedTime2 = schedTime2 + 1
+    	if (IsTomorrowaWeekday()) {
+    		schedTime2 = schedTime2 + 1
+    	}
+    	else
+    	{
+    		schedTime2 = timeToday(OfftimeWkend2,location.timeZone)
+    	}	
     } 
    	schedule(schedTime2, "stopTimerCallback2")
     
     def schedTime3 = timeToday(OntimeWk1,location.timeZone)
     if (timeNow >= schedTime3.time) { 
     	// We have passed current time so will scheduled for next day
-    	schedTime3 = schedTime3 + 1
+    	if (IsTomorrowaWeekday()) {
+    		schedTime3 = schedTime3 + 1
+    	}
+    	else
+    	{
+    		schedTime3 = timeToday(OntimeWkend1,location.timeZone)
+    	}	
     } 
    	schedule(schedTime3, "startTimerCallback1")
     
     def schedTime4 = timeToday(OntimeWk2,location.timeZone)
     if (timeNow >= schedTime4.time) { 
     	// We have passed current time so will scheduled for next day
-       schedTime4 = schedTime4 + 1
+       if (IsTomorrowaWeekday()) {
+    		schedTime4 = schedTime4 + 1
+    	}
+    	else
+    	{
+    		schedTime4 = timeToday(OntimeWkend2,location.timeZone)
+    	}	
     } 
    	schedule(schedTime4, "startTimerCallback2")
     
@@ -310,6 +358,25 @@ private IsAnyOneHome() {
     }
     log.debug "Someone is home: $result"
     return result
+}
+
+private IsTomorrowaWeekday() {
+	def result=false
+	def calendar = Calendar.getInstance()
+	calendar.setTimeZone(location.timeZone)
+	def today = calendar.get(Calendar.DAY_OF_WEEK)
+	log.debug("today=${today}")
+	switch (today) {
+		case Calendar.MONDAY:
+		case Calendar.TUESDAY:
+		case Calendar.WEDNESDAY:
+		case Calendar.THURSDAY:
+		case Calendar.SUNDAY:
+			result=true
+    }
+
+	log.debug("The return is $result")
+	return result
 }
 
 private IsWeekday() {
