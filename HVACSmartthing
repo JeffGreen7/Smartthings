@@ -27,8 +27,13 @@ definition(
 
 preferences {
 
-	page(name: "pageOne", title: "Select Thermostat to use and people who need to be home", nextPage: "pageTwo", uninstall: true) {
-		section("Choose thermostat... ") {
+	page(name: "pageOne", title: "Select Thermostat Scheduler settings", nextPage: "pageTwo", uninstall: true) {
+		
+        section("This setting turns the Thermostat scheduler On/Off") {
+        input(name: "On-Off", type: "enum", title: "Thermostat On/Off", options: ["On","Off"])
+        }
+        
+        section("Choose thermostat... ") {
 			input "thermostat", "capability.thermostat", required: true
 		}
     
@@ -39,10 +44,6 @@ preferences {
 	
 	page(name: "pageTwo", title: "Weekday Schedule times and settings", nextPage: "pageThree", uninstall: false) {
 	
-    	section("On/Off Setting") {
-        input(name: "On-Off", type: "enum", title: "Switch On/Off", options: ["On","Off"])
-        }
-        
 		section("Monday to Friday Schedule On Time 1") {
         	input "OntimeWk1", "time", title: "On Time 1", required: true	
 			input "tempSetpointOnWk1H", "number", title: "Time 1 Heat Temp Degrees Fahrenheit?", required: true
@@ -209,7 +210,7 @@ def ScheduleWeekDay() {
 def installed()
 {
 	def On = "On"
-	if (On-Off ==On)
+	if (On-Off == On)
     {
 		subscribe(thermostat, "heatingSetpoint", heatSetpointHandler)
 		subscribe(thermostat, "coolingSetpoint", coolSetpointHandler)
@@ -233,7 +234,7 @@ def installed()
 def updated()
 {
 	def On = "On"
-	if (On-Off ==On)
+	if (On-Off == On)
     {
     	unsubscribe()
 		subscribe(thermostat, "heatingSetpoint", heatingSetpointHandler)
