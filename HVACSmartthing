@@ -39,7 +39,9 @@ preferences {
 	
 	page(name: "pageTwo", title: "Weekday Schedule times and settings", nextPage: "pageThree", uninstall: false) {
 	
-    	input(name: "On-Off", type: "enum", title: "Switch On/Off", options: ["On","Off"])
+    	section("On/Off Setting") {
+        input(name: "On-Off", type: "enum", title: "Switch On/Off", options: ["On","Off"])
+        }
         
 		section("Monday to Friday Schedule On Time 1") {
         	input "OntimeWk1", "time", title: "On Time 1", required: true	
@@ -206,7 +208,7 @@ def ScheduleWeekDay() {
 
 def installed()
 {
-	Def On = "On"
+	def On = "On"
 	if (On-Off ==On)
     {
 		subscribe(thermostat, "heatingSetpoint", heatSetpointHandler)
@@ -228,7 +230,7 @@ def installed()
 
 def updated()
 {
-	Def On = "On"
+	def On = "On"
 	if (On-Off ==On)
     {
     	unsubscribe()
