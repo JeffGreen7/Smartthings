@@ -39,6 +39,8 @@ preferences {
 	
 	page(name: "pageTwo", title: "Weekday Schedule times and settings", nextPage: "pageThree", uninstall: false) {
 	
+    	input(name: "On-Off", type: "enum", title: "Switch On/Off", options: ["On","Off"])
+        
 		section("Monday to Friday Schedule On Time 1") {
         	input "OntimeWk1", "time", title: "On Time 1", required: true	
 			input "tempSetpointOnWk1H", "number", title: "Time 1 Heat Temp Degrees Fahrenheit?", required: true
@@ -204,31 +206,47 @@ def ScheduleWeekDay() {
 
 def installed()
 {
-	subscribe(thermostat, "heatingSetpoint", heatSetpointHandler)
-	subscribe(thermostat, "coolingSetpoint", coolSetpointHandler)
-	subscribe(thermostat, "temperature", temperatureHandler)
-    if (IsWeekday())
+	Def On = "On"
+	if (On-Off ==On)
     {
-    	ScheduleWeekDay()
+		subscribe(thermostat, "heatingSetpoint", heatSetpointHandler)
+		subscribe(thermostat, "coolingSetpoint", coolSetpointHandler)
+		subscribe(thermostat, "temperature", temperatureHandler)
+    	if (IsWeekday())
+    	{
+    		ScheduleWeekDay()
 		
-     } else {
-     	ScheduleWeekendDay()
-	}	
+	     } else {
+    	 	ScheduleWeekendDay()
+		}
+    }
+    else
+    {
+    	log.debug("Thermostat is off")
+    }
 }
 
 def updated()
 {
-	unsubscribe()
-	subscribe(thermostat, "heatingSetpoint", heatingSetpointHandler)
-	subscribe(thermostat, "coolingSetpoint", coolingSetpointHandler)
-	subscribe(thermostat, "temperature", temperatureHandler)
-    if (IsWeekday())
-	{
-    	ScheduleWeekDay()
+	Def On = "On"
+	if (On-Off ==On)
+    {
+    	unsubscribe()
+		subscribe(thermostat, "heatingSetpoint", heatingSetpointHandler)
+		subscribe(thermostat, "coolingSetpoint", coolingSetpointHandler)
+		subscribe(thermostat, "temperature", temperatureHandler)
+   	 	if (IsWeekday())
+		{
+    		ScheduleWeekDay()
 		
-     } else {
-     	ScheduleWeekendDay()
-	}	
+    	} else {
+     		ScheduleWeekendDay()
+		}
+	}
+    else
+    {
+    	log.debug("Thermostat is off")
+    }
 }
 
 def heatingSetpointHandler(evt)
